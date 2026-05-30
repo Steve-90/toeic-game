@@ -1,0 +1,6 @@
+{
+  "name": "토익 상사 (TOEIC Corp.)",
+  "description": "인턴부터 CEO까지 초고속 승진하는 게이미피케이션 토익 영단어 학습기. 상황별 단어 짝꿍구문, 타임스탬프 결재 퀴즈, 비밀 반성문 및 정광민 CEO의 족집게 화상 과외 룸 탑재.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
