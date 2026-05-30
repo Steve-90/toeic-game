@@ -15,9 +15,18 @@ interface WorkReportProps {
   onAddXP: (xp: number) => void;
   registeredWords: TOEICWord[];
   onAddNewWord: (newWord: TOEICWord) => void;
+  bookmarkedWordIds: number[];
+  onToggleBookmark: (wordId: number) => void;
 }
 
-export default function WorkReport({ currentRank, onAddXP, registeredWords, onAddNewWord }: WorkReportProps) {
+export default function WorkReport({ 
+  currentRank, 
+  onAddXP, 
+  registeredWords, 
+  onAddNewWord,
+  bookmarkedWordIds = [],
+  onToggleBookmark
+}: WorkReportProps) {
   // Filter core pre-loaded words matching the rank or lower, or including any dynamically added words
   const eligibleWords = registeredWords.filter(w => {
     // If it's unlocked by rank level
@@ -43,12 +52,14 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
 
   // Extract unlocked categories
   const rankInfo = RANK_INFOS[currentRank];
-  const unlockedCategories = ['전체', ...rankInfo.unlockedCategories];
+  const unlockedCategories = ['전체', '🔖 북마크 단어', ...rankInfo.unlockedCategories];
 
-  // Filter based on selected category
-  const filteredWords = selectedCategory === '전체' 
-    ? eligibleWords 
-    : eligibleWords.filter(w => w.category === selectedCategory);
+  // Filter based on selected category / bookmarks
+  const filteredWords = selectedCategory === '🔖 북마크 단어'
+    ? eligibleWords.filter(w => bookmarkedWordIds.includes(w.id))
+    : (selectedCategory === '전체' 
+        ? eligibleWords 
+        : eligibleWords.filter(w => w.category === selectedCategory));
 
   const activeWord: TOEICWord | undefined = filteredWords[currentIndex];
 
@@ -261,13 +272,30 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-slate-150 shadow-md p-5 relative overflow-hidden flex flex-col justify-between min-h-80">
             {/* Header detail */}
-            <div className="flex justify-between items-start text-[10px] border-b border-slate-100 pb-2.5 mb-4 text-slate-400">
-              <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded font-bold font-mono">
-                DEPT: {activeWord.category}
-              </span>
-              <span className="font-mono text-slate-400">
-                기안서 {currentIndex + 1} / {filteredWords.length}
-              </span>
+            <div className="flex justify-between items-center text-[10px] border-b border-slate-100 pb-2.5 mb-4 text-slate-400">
+              <div className="flex items-center gap-1.5">
+                <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded font-bold font-mono">
+                  DEPT: {activeWord.category}
+                </span>
+                <span className="bg-amber-50 text-amber-700 font-extrabold px-1.5 py-0.5 rounded border border-amber-200/40 font-sans">
+                  Lvl: {activeWord.rank_level}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-slate-400">
+                  기안서 {currentIndex + 1} / {filteredWords.length}
+                </span>
+                <button
+                  onClick={() => onToggleBookmark(activeWord.id)}
+                  className="p-1 hover:bg-slate-50 text-slate-400 active:scale-90 rounded transition cursor-pointer"
+                  title={bookmarkedWordIds.includes(activeWord.id) ? "북마크 해제" : "북마크 단어장에 추가"}
+                >
+                  <Bookmark
+                    className={bookmarkedWordIds.includes(activeWord.id) ? "fill-amber-400 text-amber-500" : "text-slate-350 hover:text-amber-500"}
+                    size={14}
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Content Body */}
@@ -435,11 +463,21 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
           </div>
         </div>
       ) : (
-        <div className="bg-white p-7 rounded-2xl border border-slate-150 shadow-md text-center py-10">
-          <BookOpen className="mx-auto text-slate-300 mb-2.5" size={32} />
-          <h4 className="font-bold text-sm text-slate-800">해당 부서에 준비된 기안서가 없습니다.</h4>
-          <p className="text-[11px] text-slate-400 mt-0.5">승진하면 더 다양한 부서와 직급 단어 카드가 해제됩니다.</p>
-        </div>
+        selectedCategory === '🔖 북마크 단어' ? (
+          <div className="bg-white p-7 rounded-2xl border border-slate-150 shadow-md text-center py-10">
+            <Bookmark className="mx-auto text-amber-500 mb-2.5 animate-pulse" size={32} />
+            <h4 className="font-bold text-sm text-slate-800">아직 북마크한 단어가 없습니다.</h4>
+            <p className="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto leading-normal">
+              기안서 단어 카드의 우측 상단 🔖 아이콘을 클릭하여 기안에 잘 실패하거나 어려운 단어를 북마크에 추가하여 집중 결재 검토를 진행해 보세요!
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white p-7 rounded-2xl border border-slate-150 shadow-md text-center py-10">
+            <BookOpen className="mx-auto text-slate-300 mb-2.5" size={32} />
+            <h4 className="font-bold text-sm text-slate-800">해당 부서에 준비된 기안서가 없습니다.</h4>
+            <p className="text-[11px] text-slate-400 mt-0.5">승진하면 더 다양한 부서와 직급 단어 카드가 해제됩니다.</p>
+          </div>
+        )
       )}
         </>
       )}

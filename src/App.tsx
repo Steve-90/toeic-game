@@ -19,6 +19,7 @@ import { Briefcase, BookOpen, Layers, ClipboardCheck, MessageCircle, RefreshCw, 
 const PROFILE_KEY = 'TOEIC_CORP_USER_PROFILE_V1';
 const INCORRECT_KEY = 'TOEIC_CORP_INCORRECT_V1';
 const WORDS_KEY = 'TOEIC_CORP_WORDS_V1';
+const BOOKMARKS_KEY = 'TOEIC_CORP_BOOKMARKS_V1';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile>({
@@ -33,6 +34,7 @@ export default function App() {
 
   const [registeredWords, setRegisteredWords] = useState<TOEICWord[]>(INSTANT_TOEIC_WORDS);
   const [incorrectWords, setIncorrectWords] = useState<IncorrectWord[]>([]);
+  const [bookmarkedWordIds, setBookmarkedWordIds] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam' | 'rpg'>('office');
 
   // Trigger floating XP indicator bubbles
@@ -67,6 +69,16 @@ export default function App() {
         setIncorrectWords(JSON.parse(localIncorrect));
       } catch (e) {
         console.error("Failed to parse local mistakes:", e);
+      }
+    }
+
+    // 4. Load bookmarked word IDs
+    const localBookmarks = localStorage.getItem(BOOKMARKS_KEY);
+    if (localBookmarks) {
+      try {
+        setBookmarkedWordIds(JSON.parse(localBookmarks));
+      } catch (e) {
+        console.error("Failed to parse bookmarks:", e);
       }
     }
   }, []);
@@ -167,6 +179,17 @@ export default function App() {
     localStorage.setItem(INCORRECT_KEY, JSON.stringify(updated));
   };
 
+  // Toggle Bookmark logic
+  const handleToggleBookmark = (wordId: number) => {
+    setBookmarkedWordIds(prev => {
+      const updated = prev.includes(wordId)
+        ? prev.filter(id => id !== wordId)
+        : [...prev, wordId];
+      localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Execute promotion level up
   const handlePromote = (newRank: typeof profile.currentRank) => {
     const updatedProfile = {
@@ -191,6 +214,7 @@ export default function App() {
       localStorage.removeItem(PROFILE_KEY);
       localStorage.removeItem(WORDS_KEY);
       localStorage.removeItem(INCORRECT_KEY);
+      localStorage.removeItem(BOOKMARKS_KEY);
       window.location.reload();
     }
   };
@@ -272,6 +296,8 @@ export default function App() {
             onAddXP={handleAddXP}
             registeredWords={registeredWords}
             onAddNewWord={handleAddNewWord}
+            bookmarkedWordIds={bookmarkedWordIds}
+            onToggleBookmark={handleToggleBookmark}
           />
         )}
 
