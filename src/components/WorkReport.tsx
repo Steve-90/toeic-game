@@ -8,6 +8,7 @@ import { Volume2, ChevronLeft, ChevronRight, BookOpen, Sparkles, Check, Bookmark
 import { TOEICWord, Rank } from '../types';
 import { INSTANT_TOEIC_WORDS, RANK_INFOS } from '../data/words';
 import { motion, AnimatePresence } from 'motion/react';
+import SentenceGame from './SentenceGame';
 
 interface WorkReportProps {
   currentRank: Rank;
@@ -26,6 +27,7 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
     return wordOrderIdx <= currentOrderIdx;
   });
 
+  const [reportSubTab, setReportSubTab] = useState<'CARD' | 'SENTENCE_GAME'>('CARD');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
   const [showAnswer, setShowAnswer] = useState(false);
@@ -168,7 +170,42 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
 
   return (
     <div className="space-y-4">
-      {/* 1. Unlocked Categories list */}
+      {/* Top Main Mode Switcher Toggle */}
+      <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+        <button
+          onClick={() => setReportSubTab('CARD')}
+          className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[11px] font-black tracking-tight transition duration-155 cursor-pointer ${
+            reportSubTab === 'CARD'
+              ? 'bg-blue-600 text-white shadow shadow-blue-100'
+              : 'text-slate-600 hover:text-slate-800'
+          }`}
+        >
+          <BookOpen size={11} />
+          <span>기본 단어 기안서</span>
+        </button>
+
+        <button
+          onClick={() => setReportSubTab('SENTENCE_GAME')}
+          className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[11px] font-black tracking-tight transition duration-155 cursor-pointer ${
+            reportSubTab === 'SENTENCE_GAME'
+              ? 'bg-blue-600 text-white shadow shadow-blue-105'
+              : 'text-slate-600 hover:text-slate-805'
+          }`}
+        >
+          <Sparkles size={11} className="text-amber-400 animate-pulse" />
+          <span>실전 예문 블라인드</span>
+        </button>
+      </div>
+
+      {reportSubTab === 'SENTENCE_GAME' ? (
+        <SentenceGame
+          currentRank={currentRank}
+          registeredWords={registeredWords}
+          onAddXP={onAddXP}
+        />
+      ) : (
+        <>
+          {/* 1. Unlocked Categories list */}
       <div className="space-y-1">
         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-0.5 block">결재 부서 선택 (Categories)</label>
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -403,6 +440,8 @@ export default function WorkReport({ currentRank, onAddXP, registeredWords, onAd
           <h4 className="font-bold text-sm text-slate-800">해당 부서에 준비된 기안서가 없습니다.</h4>
           <p className="text-[11px] text-slate-400 mt-0.5">승진하면 더 다양한 부서와 직급 단어 카드가 해제됩니다.</p>
         </div>
+      )}
+        </>
       )}
     </div>
   );
