@@ -30,7 +30,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface MyOfficeProps {
   profile: UserProfile;
   onClockIn: () => void;
-  onNavigate: (tab: 'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam') => void;
+  onNavigate: (tab: 'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam' | 'rpg') => void;
   onDrinkCoffee?: () => void;
   onUpdateName?: (newName: string) => void;
 }
@@ -749,6 +749,26 @@ export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee
             </div>
             <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[8px] font-bold rounded font-mono uppercase tracking-wider shrink-0">
               Special
+            </span>
+          </div>
+
+          {/* Task 5: RPG Word Monster Hunt Game */}
+          <div
+            onClick={() => onNavigate('rpg')}
+            className="flex items-center gap-4 p-4 bg-gradient-to-r from-slate-900 to-indigo-950 border border-slate-800 rounded-2xl hover:border-red-500 transition-all duration-200 shadow-md cursor-pointer group hover:-translate-y-0.5 text-white"
+          >
+            <div className="w-11 h-11 bg-red-950/70 rounded-xl flex items-center justify-center text-red-500 font-extrabold text-lg border border-red-900 group-hover:bg-red-650 group-hover:text-white transition-colors duration-200 shrink-0 animate-pulse">
+              ⚔️
+            </div>
+            <div className="flex-1 text-left">
+              <h4 className="text-xs font-bold text-slate-100 group-hover:text-red-400 transition-colors leading-tight flex items-center gap-1.5">
+                <span>[토익 사냥터] RPG 비즈니스 괴물 처단전</span>
+                <span className="text-[8px] bg-red-500 px-1.5 py-0.2 rounded text-white uppercase font-black tracking-wider animate-bounce font-mono">RPG</span>
+              </h4>
+              <p className="text-[10px] text-indigo-200 mt-0.5">배운 단어를 칼과 도장 무기로 무장해 비즈니스 에러 몬스터 사냥!</p>
+            </div>
+            <span className="px-2 py-0.5 bg-red-950 text-red-400 text-[8px] font-black rounded border border-red-900 font-mono uppercase tracking-wider shrink-0">
+              Battle
             </span>
           </div>
         </div>

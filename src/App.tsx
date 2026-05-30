@@ -13,7 +13,8 @@ import QuizConsole from './components/QuizConsole';
 import ReflectionNotes from './components/ReflectionNotes';
 import PromotionExam from './components/PromotionExam';
 import CeoChat from './components/CeoChat';
-import { Briefcase, BookOpen, Layers, ClipboardCheck, MessageCircle, RefreshCw } from 'lucide-react';
+import WordGameRPG from './components/WordGameRPG';
+import { Briefcase, BookOpen, Layers, ClipboardCheck, MessageCircle, RefreshCw, Swords } from 'lucide-react';
 
 const PROFILE_KEY = 'TOEIC_CORP_USER_PROFILE_V1';
 const INCORRECT_KEY = 'TOEIC_CORP_INCORRECT_V1';
@@ -32,7 +33,7 @@ export default function App() {
 
   const [registeredWords, setRegisteredWords] = useState<TOEICWord[]>(INSTANT_TOEIC_WORDS);
   const [incorrectWords, setIncorrectWords] = useState<IncorrectWord[]>([]);
-  const [activeTab, setActiveTab] = useState<'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam'>('office');
+  const [activeTab, setActiveTab] = useState<'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam' | 'rpg'>('office');
 
   // Trigger floating XP indicator bubbles
   const [floatingXp, setFloatingXp] = useState<string | null>(null);
@@ -312,6 +313,16 @@ export default function App() {
             onNavigate={setActiveTab}
           />
         )}
+
+        {activeTab === 'rpg' && (
+          <WordGameRPG
+            currentRank={profile.currentRank}
+            registeredWords={registeredWords}
+            username={profile.userId}
+            onAddXP={handleAddXP}
+            onAddIncorrectWord={handleAddIncorrectWord}
+          />
+        )}
       </div>
 
       {/* 3. Bottom Device Tab Bar Navigation */}
@@ -364,6 +375,16 @@ export default function App() {
         >
           <MessageCircle size={16} />
           <span className="text-[9px] mt-1 font-bold">AI특집</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('rpg')}
+          className={`flex flex-col items-center flex-1 py-1 transition cursor-pointer ${
+            activeTab === 'rpg' ? 'text-blue-600 font-extrabold' : 'text-slate-400 hover:text-slate-500'
+          }`}
+        >
+          <Swords size={16} className={activeTab === 'rpg' ? 'animate-bounce text-red-500' : ''} />
+          <span className="text-[9px] mt-1 font-bold">사냥터 (RPG)</span>
         </button>
       </div>
     </DeskTable>
