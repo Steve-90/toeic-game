@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, ChevronLeft, ChevronRight, BookOpen, Sparkles, Check, Bookmark, PlusCircle, HelpCircle } from 'lucide-react';
 import { TOEICWord, Rank } from '../types';
 import { INSTANT_TOEIC_WORDS, RANK_INFOS } from '../data/words';
@@ -49,6 +49,17 @@ export default function WorkReport({
   // Dynamic Word recommended state
   const [loadingRecommend, setLoadingRecommend] = useState(false);
   const [recommendError, setRecommendError] = useState<string | null>(null);
+
+  // Monitor length of eligibleWords to automatically select, reset and jump to newly added recommended words
+  const prevLengthRef = useRef(eligibleWords.length);
+  useEffect(() => {
+    if (eligibleWords.length > prevLengthRef.current) {
+      setSelectedCategory('전체');
+      setCurrentIndex(eligibleWords.length - 1);
+      setShowAnswer(true);
+    }
+    prevLengthRef.current = eligibleWords.length;
+  }, [eligibleWords.length]);
 
   // Extract unlocked categories
   const rankInfo = RANK_INFOS[currentRank];
@@ -155,19 +166,12 @@ export default function WorkReport({
           example_en: w.example_en,
           example_ko: w.example_ko
         };
-        // Add to our main active words array
+        // Add to our main active words array (the useEffect above reacts to this and selects it)
         onAddNewWord(compiledWord);
-        // Find inside filtered list
-        setSelectedCategory('전체');
-        // Set index to the end so it points to the newly added item
-        setTimeout(() => {
-          setCurrentIndex(eligibleWords.length); // length will be the newly updated one inside parent
-          setShowAnswer(true);
-          // Auto brief new word description generated
-          if (w.office_mission) {
-            setBriefing(`💬 [비서실의 특수 임무 전달]\n${w.office_mission}`);
-          }
-        }, 150);
+        // Auto brief new word description generated
+        if (w.office_mission) {
+          setBriefing(`💬 [비서실의 특수 임무 전달]\n${w.office_mission}`);
+        }
         onAddXP(30); // Give +30 XP bonus for doing custom business training!
       } else {
         setRecommendError("단어 생성 실패");
@@ -461,6 +465,23 @@ export default function WorkReport({
               <ChevronRight size={14} />
             </button>
           </div>
+
+          {/* Guide banner for getting more words when reaching the end */}
+          {currentIndex === filteredWords.length - 1 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-2xl text-[11px] text-blue-800 space-y-1.5"
+            >
+              <div className="flex items-center gap-1.5 font-bold">
+                <Sparkles size={12} className="text-amber-500 animate-pulse" />
+                <span>🎉 마지막 결재 문서 도달! 새로운 단어로 기안하기</span>
+              </div>
+              <p className="text-slate-600 leading-normal">
+                현재 카테고리의 모든 기본 단어를 확인했습니다. 더 공부하고 싶으시다면 상단의 <strong>‘오늘의 돌발 특수 업무 기안 - [업무 할당]’</strong> 버튼을 클릭하여, 최고의 AI 비서실장 Gemini가 선정한 고품격 비즈니스 영어 기출 단어를 무제한으로 발행받아 보세요!
+              </p>
+            </motion.div>
+          )}
         </div>
       ) : (
         selectedCategory === '🔖 북마크 단어' ? (

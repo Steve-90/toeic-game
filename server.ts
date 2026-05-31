@@ -81,22 +81,36 @@ async function startServer() {
     }
   });
 
-  // --- API 2: Dynamic Custom TOEIC Word Recomendation ---
+  // --- API 2: Dynamic Custom TOEIC Word Recommendation ---
   app.post("/api/generate-recommendation", async (req, res) => {
     try {
       const { userRank } = req.body;
       const client = getGeminiClient();
 
+      // Determine valid category recommendation limits based on userRank
+      let categoryLimit = "인사/채용, 사무실 복지, 사내 공지 중 하나";
+      if (userRank === "사원") {
+        categoryLimit = "마케팅/광고, 고객 지원, 사무/운송 중 하나";
+      } else if (userRank === "대리") {
+        categoryLimit = "회의/협상, 금융/은행, 행사/전시 중 하나";
+      } else if (userRank === "과장") {
+        categoryLimit = "재무/정산, 기술/IT, M&A/투자 중 하나";
+      } else if (userRank === "CEO") {
+        categoryLimit = "경영전략/리더십, 글로벌 경제, 대외 협력 중 하나";
+      }
+
       const prompt = `
 너는 '토익 상사(TOEIC Corp.)'의 최고인사담당자(CHRO)이자 토익 만점 강사야.
 직급 '${userRank || "인턴"}' 레벨의 유저에게 유용한 실제 완벽한 비즈니스 토익 기출 핵심 단어를 1개 추천해줘.
-사용자가 이미 배운 흔한 단어는 가급적 피해주고, 회사 테마에 맞는 아주 참신하고 기출 빈도가 매우 높은 단어여야 해.
+사용자가 이미 배운 흔한 단어는 피하고, 회사 대단한 테마에 맞는 아주 참신하고 기출 빈도가 높은 새로운 단어여야 해.
 
-반드시 다른 텍스트는 출력하지 말고 아래의 JSON 형태를 완벽히 준수해줘:
+반드시 다른 텍스트는 출력하지 말고 아래의 JSON 형태를 완벽히 준수해줘.
+특히 "category" 필드는 무조건 다음 목록에 있는 값 중 하나로만 지정해야 해: [${categoryLimit}]
+
 {
   "word": "단어스펠링",
   "meaning": "한글 뜻",
-  "category": "비즈니스 카테고리명 (예: 인사/채용, 마케팅, 재무, 물류 등)",
+  "category": "여기에 위의 알맞은 카테고리명을 지정하세요",
   "collocation": "영어 짝꿍 표현 (빈출 구문)",
   "example_en": "비즈니스 배경영어 예문",
   "example_ko": "예문 번역",
@@ -112,8 +126,18 @@ async function startServer() {
         }
       });
 
-      const responseText = response.text || "{}";
-      const wordObj = JSON.parse(responseText.trim());
+      let responseText = response.text || "{}";
+      responseText = responseText.trim();
+      
+      // Strip markdown code block wrapper if present
+      if (responseText.startsWith("```")) {
+        responseText = responseText
+          .replace(/^```json\s*/i, "")
+          .replace(/```$/, "")
+          .trim();
+      }
+
+      const wordObj = JSON.parse(responseText);
       res.json({ success: true, word: wordObj });
     } catch (err: any) {
       console.error("Recommendation error:", err);

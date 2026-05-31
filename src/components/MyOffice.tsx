@@ -663,7 +663,7 @@ export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee
                 <span>창업 환생 영구 패시브 인센티브 내역:</span>
               </p>
               <ul className="list-disc pl-4 space-y-0.5 text-slate-300 font-sans">
-                <li>직급은 성스러운 초심으로 돌아가 <strong>'인턴'</strong>으로 재배치되지만, <strong>기존에 학습한 모든 단어, 북마크, 오답 관리 정보는 완벽하게 계승</strong>됩니다.</li>
+                <li>직급은 성스러운 초심으로 돌아가 <strong>'인턴'</strong>으로 재배치되어 상위 부서 결재 서류들이 일시적으로 다시 잠기지만, <strong>기존에 학습한 모든 단어, 북마크, 오답 관리 정보는 완벽하게 계승</strong>됩니다. (초고속 진급 시 해당 직급의 부서 단어들이 즉시 재개방되며, 상단의 <strong>[업무 할당]</strong> 기능을 통해 새로운 단어를 실시간 추가 생성할 수도 있습니다!)</li>
                 <li><strong>[환생 누적 배율 버프]</strong>: 신규 창업 회차에서 이루어지는 모든 업무 보고, 결재, 돌발 훈련을 통해 획득하는 <strong>XP가 누적 {(1 + ((profile.rebirthCount || 0) + 1) * 0.5).toFixed(1)}배</strong>로 영구 곱 배산됩니다 (속도 체감 대폭 증가)!</li>
                 <li>프로필 및 로비에 영구적으로 과시되는 <strong>창업 회차 엠블럼 훈장 (🥋)</strong> 이 활성화 및 업그레이드됩니다.</li>
               </ul>
