@@ -33,6 +33,7 @@ interface MyOfficeProps {
   onNavigate: (tab: 'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam' | 'rpg') => void;
   onDrinkCoffee?: () => void;
   onUpdateName?: (newName: string) => void;
+  onRebirth?: () => void;
 }
 
 interface CharacterState {
@@ -140,7 +141,7 @@ const CHARACTER_STATES: Record<Rank, CharacterState> = {
   }
 };
 
-export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee, onUpdateName }: MyOfficeProps) {
+export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee, onUpdateName, onRebirth }: MyOfficeProps) {
   const currentRankInfo = RANK_INFOS[profile.currentRank];
   const nextRank = currentRankInfo.nextTitle;
   const xpThreshold = currentRankInfo.xpRequired;
@@ -271,7 +272,15 @@ export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee
               {currentRankInfo.avatar}
             </div>
             <div className="flex-1 text-left">
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">현재 인사 배치</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">현재 인사 배치</span>
+                {profile.rebirthCount && profile.rebirthCount > 0 ? (
+                  <span className="bg-gradient-to-r from-indigo-500 to-purple-600 border border-purple-500/30 text-white font-extrabold text-[8px] px-1.5 py-0.2 rounded-full flex items-center gap-0.5 animate-pulse">
+                    <span>🥋</span>
+                    <span>창업 {profile.rebirthCount}회차</span>
+                  </span>
+                ) : null}
+              </div>
               {isEditingName ? (
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <input
@@ -612,6 +621,66 @@ export default function MyOffice({ profile, onClockIn, onNavigate, onDrinkCoffee
               className="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-xs py-2.5 px-4 rounded-xl shadow-md transition ml-2 shrink-0 cursor-pointer"
             >
               인사심사 받기
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* 2.6 CEO Exclusive Rebirth & Startup Banner */}
+      {profile.currentRank === 'CEO' && (
+        <motion.div
+          initial={{ scale: 0.95, y: 10 }}
+          animate={{ scale: 1, y: 0 }}
+          className="bg-gradient-to-r from-indigo-950 via-purple-950 to-slate-950 text-white p-5 rounded-2xl shadow-xl border-2 border-amber-400 relative overflow-hidden text-left"
+        >
+          <div className="absolute -right-5 -top-5 text-8xl opacity-5 pointer-events-none font-bold select-none font-mono">CEO</div>
+          <div className="relative text-left z-10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="bg-amber-400 text-slate-950 font-black text-[9px] px-2.5 py-0.5 rounded-full animate-bounce">
+                  CEO 특권 개방
+                </span>
+                <span className="text-xs font-semibold text-amber-200">명예퇴직 & 창업 지원서</span>
+              </div>
+              {profile.rebirthCount && profile.rebirthCount > 0 ? (
+                <span className="font-mono text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                  현재 누적 {profile.rebirthCount}회 창업 중
+                </span>
+              ) : null}
+            </div>
+            
+            <div>
+              <h3 className="font-extrabold text-sm text-yellow-300">👔 명예 기안: 명예퇴직 및 첨단 AI 벤처 창업 (Prestige Rebirth)</h3>
+              <p className="text-[10px] text-zinc-200 mt-1 leading-relaxed">
+                현재 토익상사의 최종 직급인 <strong>대표이사(CEO)</strong> 임기를 성공적으로 마쳤습니다!
+                회사의 경영 전권을 후임에게 양도하고, 은퇴 지원금 및 퇴직금을 바탕으로 <strong className="text-amber-300">초고속 성장형 AI 벤처 계열사 스타트업</strong>을 새로 설립(환생)하시겠습니까?
+              </p>
+            </div>
+
+            <div className="bg-black/30 p-3 rounded-xl border border-white/5 text-[9.5px] leading-relaxed text-slate-200 space-y-1">
+              <p className="font-extrabold text-amber-400 flex items-center gap-1">
+                <span>🎁</span>
+                <span>창업 환생 영구 패시브 인센티브 내역:</span>
+              </p>
+              <ul className="list-disc pl-4 space-y-0.5 text-slate-300 font-sans">
+                <li>직급은 성스러운 초심으로 돌아가 <strong>'인턴'</strong>으로 재배치되지만, <strong>기존에 학습한 모든 단어, 북마크, 오답 관리 정보는 완벽하게 계승</strong>됩니다.</li>
+                <li><strong>[환생 누적 배율 버프]</strong>: 신규 창업 회차에서 이루어지는 모든 업무 보고, 결재, 돌발 훈련을 통해 획득하는 <strong>XP가 누적 {(1 + ((profile.rebirthCount || 0) + 1) * 0.5).toFixed(1)}배</strong>로 영구 곱 배산됩니다 (속도 체감 대폭 증가)!</li>
+                <li>프로필 및 로비에 영구적으로 과시되는 <strong>창업 회차 엠블럼 훈장 (🥋)</strong> 이 활성화 및 업그레이드됩니다.</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                if (onRebirth) {
+                  onRebirth();
+                } else {
+                  alert("창업 기능이 활성화 단계입니다.");
+                }
+              }}
+              className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-350 hover:to-yellow-400 active:scale-95 text-slate-950 font-black text-xs py-3 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>⚔️</span>
+              <span>명예퇴직 결재 승인 및 신규 벤처 창업하기 (Rebirth)</span>
             </button>
           </div>
         </motion.div>

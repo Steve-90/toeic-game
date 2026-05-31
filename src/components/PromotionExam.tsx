@@ -14,7 +14,9 @@ interface PromotionExamProps {
   registeredWords: TOEICWord[];
   onPromote: (newRank: Rank) => void;
   onAddXP: (xp: number) => void;
-  onNavigate: (tab: 'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam') => void;
+  onNavigate: (tab: 'office' | 'words' | 'quiz' | 'reflection' | 'ceo' | 'exam' | 'rpg') => void;
+  onRebirth?: () => void;
+  rebirthCount?: number;
 }
 
 interface ExamQuestion {
@@ -28,7 +30,9 @@ export default function PromotionExam({
   registeredWords,
   onPromote,
   onAddXP,
-  onNavigate
+  onNavigate,
+  onRebirth,
+  rebirthCount = 0
 }: PromotionExamProps) {
   const currentRankInfo = RANK_INFOS[currentRank];
   const nextRank = currentRankInfo.nextTitle;
@@ -41,10 +45,64 @@ export default function PromotionExam({
 
   if (!nextRank) {
     return (
-      <div className="bg-white rounded-2xl p-6 border text-center space-y-3">
-        <Award className="mx-auto text-amber-500" size={36} />
-        <h4 className="font-bold text-slate-800 text-sm">최종 진급 완료 (CEO)</h4>
-        <p className="text-xs text-slate-400">토익상사 내에서 더 이상 올라갈 곳이 없이 극의에 도달했습니다!</p>
+      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white rounded-2xl p-6 border border-slate-800 text-center space-y-5 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="space-y-1 text-center">
+          <Award className="mx-auto text-amber-400 animate-pulse" size={44} />
+          <span className="text-[10px] bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider inline-block">
+            최고 직위 완수
+          </span>
+          <h3 className="text-lg font-black text-amber-300 mt-2">최종 사령장: 토익상사 최고 총수 (CEO)</h3>
+          <p className="text-xs text-indigo-200 mt-1 max-w-sm mx-auto leading-relaxed">
+            축하합니다! 당신은 토익상사 내에서 배울 수 있는 부서별 핵심 비즈니스 실무 영어 어휘를 모두 정복하고 극의에 도달했습니다!
+          </p>
+        </div>
+
+        <div className="bg-black/40 p-4 rounded-xl border border-white/5 text-left text-[10.5px] sm:text-xs leading-relaxed space-y-3.5">
+          <div>
+            <h4 className="font-bold text-amber-400 flex items-center gap-1">
+              <span>🥋</span>
+              <span>정광민 대표이사가 후임 총수에게 드리는 제안:</span>
+            </h4>
+            <p className="text-slate-300 mt-1">
+              현재 대표이사 직에 앉아 수동적으로 결재만 기다리는 것은 당신 같은 에이스에게 너무 지루할 것입니다. 
+              경영 전권을 명예롭게 넘기고, 은퇴 퇴직금으로 <strong>'차세대 첨단 AI 기술 스타트업'을 창업(환생)</strong>하여 신입 인턴사원의 순수한 마음으로 글로벌 시장에 다시 한번 도전장을 내보시는 건 어떻겠습니까?
+            </p>
+          </div>
+
+          <div className="border-t border-slate-800 pt-3 space-y-1.5 text-slate-350">
+            <p className="font-extrabold text-white">🎁 창업 환생 영구 패시브 인센티브 내역:</p>
+            <ul className="list-disc pl-4 space-y-0.5 text-slate-300">
+              <li>직급은 다시 영광의 <strong>'인턴'</strong>으로 돌아가지만, 그동안 성실히 수집하고 기안한 <strong>모든 단어장 목록, 북마크, 오답 이력은 완전 전승</strong>됩니다!</li>
+              <li><strong>[환생 누적 배율 버프]</strong>: 신규 창업 회차에서 획득하는 모든 복습 및 업무 XP의 배율이 영구적으로 <strong>{(1 + (rebirthCount + 1) * 0.5).toFixed(1)}배</strong>로 업그레이드 폭증합니다!</li>
+              <li>유저 프로필 및 집무실에 전시되는 <strong>창업 {rebirthCount + 1}회차 엠블럼 훈장 (🥋)</strong> 이 활성화됩니다.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={() => onNavigate('office')}
+            className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-3 px-4 rounded-xl cursor-pointer transition text-center"
+          >
+            집무실로 돌아가기
+          </button>
+          <button
+            onClick={() => {
+              if (onRebirth) {
+                onRebirth();
+              } else {
+                alert("기능 작동 준비 중입니다.");
+              }
+            }}
+            className="flex-1 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-350 hover:to-yellow-400 active:scale-95 text-slate-950 text-xs font-black py-3 px-4 rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-1 font-sans text-center"
+          >
+            <span>⚔️</span>
+            <span>명예퇴직 서명 및 창업하기 (Rebirth)</span>
+          </button>
+        </div>
       </div>
     );
   }

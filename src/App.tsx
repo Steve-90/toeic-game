@@ -91,14 +91,16 @@ export default function App() {
 
   // State manipulation triggers: Add user experience (XP)
   const handleAddXP = (xp: number) => {
+    const multiplier = 1 + (profile.rebirthCount || 0) * 0.5;
+    const finalXp = Math.floor(xp * multiplier);
     const updatedProfile = {
       ...profile,
-      totalXP: profile.totalXP + xp
+      totalXP: profile.totalXP + finalXp
     };
     saveProfile(updatedProfile);
 
     // Trigger visual popup bubble
-    setFloatingXp(`+${xp} XP`);
+    setFloatingXp(`+${finalXp} XP`);
     setTimeout(() => {
       setFloatingXp(null);
     }, 1500);
@@ -219,6 +221,50 @@ export default function App() {
     }
   };
 
+  // Rebirth (Prestige honorary retirement system) for CEO
+  const handleRebirth = () => {
+    const nextRebirthCount = (profile.rebirthCount || 0) + 1;
+    const updatedProfile = {
+      ...profile,
+      currentRank: "인턴" as const,
+      totalXP: 0,
+      heartCount: 3,
+      rebirthCount: nextRebirthCount
+    };
+    saveProfile(updatedProfile);
+    setActiveTab('office'); // Auto-navigate to Office lobby
+    
+    // Play celebratory sound effect
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5 arpeggio
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.1);
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime + idx * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.1 + 0.3);
+        osc.start(audioCtx.currentTime + idx * 0.1);
+        osc.stop(audioCtx.currentTime + idx * 0.1 + 0.35);
+      });
+    } catch (e) {}
+
+    alert(`🎉 [축하합니다! 명예퇴직 및 첨단 벤처 창업 성공]
+    
+토익상사 CEO로서의 찬란한 업무 임기를 훌륭히 완수하고 명예퇴직을 선언하셨습니다!
+    
+은퇴 지원 자금으로 '초고성능 스마트 AI 벤처'를 창업하여 1인 기업 도전을 새롭게 시작하셨습니다.
+    
+- 새로운 직급: 인턴 (창업 준비 위원)
+- 영구 보너스 기어: 환생 회차 [창업 ${nextRebirthCount}회차] 개방!
+- 앞으로 서류결재, 업무보고, 돌발 전투 등 모든 활동으로 얻는 XP 획득량이 기본 대비 [${(1 + nextRebirthCount * 0.5).toFixed(1)}배]로 영구 증폭 보장됩니다!
+    
+초심으로 되돌아가, 이 패기 가득한 기술 스타트업을 또다시 글로벌 대기업으로 승천시켜 보십시오!`);
+  };
+
   // Direct change of the profile username
   const handleUpdateName = (newName: string) => {
     if (!newName.trim()) return;
@@ -243,7 +289,14 @@ export default function App() {
             TC
           </div>
           <div className="flex flex-col">
-            <span className="font-black tracking-tight text-sm text-slate-800 leading-none">TOEIC CORP.</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-black tracking-tight text-sm text-slate-800 leading-none">TOEIC CORP.</span>
+              {profile.rebirthCount && profile.rebirthCount > 0 ? (
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[7px] font-black px-1 py-0.2 rounded animate-pulse" title={`누적 창업 ${profile.rebirthCount}회차 수행 중`}>
+                  R{profile.rebirthCount}
+                </span>
+              ) : null}
+            </div>
             <span className="text-[8px] font-bold text-slate-400 tracking-widest mt-0.5 uppercase">LTD. ENTERPRISE</span>
           </div>
         </div>
@@ -287,6 +340,7 @@ export default function App() {
             onNavigate={setActiveTab}
             onDrinkCoffee={handleDrinkCoffeeAndRestore}
             onUpdateName={handleUpdateName}
+            onRebirth={handleRebirth}
           />
         )}
 
@@ -337,6 +391,8 @@ export default function App() {
             onPromote={handlePromote}
             onAddXP={handleAddXP}
             onNavigate={setActiveTab}
+            onRebirth={handleRebirth}
+            rebirthCount={profile.rebirthCount || 0}
           />
         )}
 

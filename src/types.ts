@@ -24,6 +24,7 @@ export interface UserProfile {
   lastCheckedIn: string; // ISO date string or date label
   dailyCompletedCount: number; // number of vocabulary studied today
   quizCount: number; // total quizzes taken
+  rebirthCount?: number; // Number of careers reincarnated as prestige
 }
 
 export interface IncorrectWord {
