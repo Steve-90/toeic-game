@@ -153,6 +153,32 @@ export default function WorkReport({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userRank: currentRank })
       });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let errorMessage = "단어 추천 생성에 실패했습니다.";
+        try {
+          const errData = JSON.parse(text);
+          if (errData && errData.error) {
+            errorMessage = errData.error;
+          }
+        } catch {
+          if (text.includes("GEMINI_API_KEY")) {
+            errorMessage = "GEMINI_API_KEY 환경 변수가 설정되지 않았습니다. 우측 상단 Settings > Secrets 메뉴에서 GEMINI_API_KEY를 추가해 주십시오!";
+          } else {
+            errorMessage = `서버 결재 오류 (상태 코드: ${response.status})`;
+          }
+        }
+        setRecommendError(errorMessage);
+        return;
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        setRecommendError("서버에서 올바르지 않은 응답(HTML)을 받았습니다. 서버가 재부팅 중일 수 있으니 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+
       const data = await response.json();
       if (data.success && data.word) {
         const w = data.word;
@@ -174,7 +200,7 @@ export default function WorkReport({
         }
         onAddXP(30); // Give +30 XP bonus for doing custom business training!
       } else {
-        setRecommendError("단어 생성 실패");
+        setRecommendError("단어 생성 실무 결안 반려됨 (응답 형식 불일치)");
       }
     } catch (err) {
       setRecommendError("AI 네트워크 응답이 지연되고 있습니다. 비서실 내부 수리 요청 중입니다.");
