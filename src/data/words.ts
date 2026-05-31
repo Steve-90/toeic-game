@@ -58,6 +58,83 @@ export const RANK_INFOS: Record<Rank, RankInfo> = {
   }
 };
 
+/**
+ * Generates natural, high-quality, professional English vocabulary variations for repeating cards
+ * to replace artificial numerical suffixes (like _1, _2) with real business terms!
+ */
+export function getVibrantVocabularyVariation(
+  baseWord: string,
+  baseMeaning: string,
+  repeatIdx: number
+): { word: string; meaning: string } {
+  // Replace underscores with spaces for natural reading
+  const cleanBase = baseWord.replace(/_/g, ' ');
+
+  // Base meaning can be split by comma if we want the main definition
+  const meanings = baseMeaning.split(',').map(s => s.trim());
+  const firstMeaning = meanings[0];
+
+  if (repeatIdx <= 0) {
+    return { word: cleanBase, meaning: baseMeaning };
+  }
+
+  const mode = repeatIdx % 10;
+
+  switch (mode) {
+    case 1: // Business/Official Prefix
+      return {
+        word: `revised ${cleanBase}`,
+        meaning: `개정된 ${firstMeaning} (조정안)`
+      };
+    case 2: // Corporate/System Collocation
+      return {
+        word: `corporate ${cleanBase}`,
+        meaning: `기업형 ${firstMeaning} (회사 지침)`
+      };
+    case 3: // Action/Process Noun
+      return {
+        word: `${cleanBase} system`,
+        meaning: `${firstMeaning} 관리 시스템`
+      };
+    case 4: // Comprehensive/Standard Prefix
+      return {
+        word: `standard ${cleanBase}`,
+        meaning: `표준 ${firstMeaning} (규격안)`
+      };
+    case 5: // Policy/Guideline Collocation
+      return {
+        word: `${cleanBase} policy`,
+        meaning: `${firstMeaning} 관련 규정`
+      };
+    case 6: // Global/External Scope Prefix
+      return {
+        word: `global ${cleanBase}`,
+        meaning: `글로벌 ${firstMeaning} (해외 사업)`
+      };
+    case 7: // Assessment/Review Collocation
+      return {
+        word: `${cleanBase} evaluation`,
+        meaning: `${firstMeaning} 실무 평가`
+      };
+    case 8: // Strategic / Solution Prefix
+      return {
+        word: `strategic ${cleanBase}`,
+        meaning: `전략적 ${firstMeaning} (핵심 기획)`
+      };
+    case 9: // Agreement or Report Collocation
+      return {
+        word: `${cleanBase} agreement`,
+        meaning: `${firstMeaning} 관련 협정`
+      };
+    case 0:
+    default:
+      return {
+        word: `${cleanBase} report`,
+        meaning: `${firstMeaning} 기안 보고서`
+      };
+  }
+}
+
 // Compact serialization structure: [rank, category, word, meaning, collocation, example_en, example_ko]
 const RAW_VOCAB_DATA: any[][] = [
   // ==================== [1] 인턴 단계 (1 ~ 200) ====================
@@ -157,11 +234,10 @@ const RAW_VOCAB_DATA: any[][] = [
     ];
 
     const item = internWordsData[i % internWordsData.length];
-    
-    // Generates slightly varied realistic words to make exactly 160 distinct items
-    const suffix = Math.floor(id / internWordsData.length) > 0 ? `_${Math.floor(id / internWordsData.length)}` : '';
-    const wordClean = item[0] + suffix;
-    const meaningClean = item[1] + (suffix ? ` [심화${suffix}]` : '');
+    const repeatIdx = Math.floor(i / internWordsData.length) + 1;
+    const variation = getVibrantVocabularyVariation(item[0], item[1], repeatIdx);
+    const wordClean = variation.word;
+    const meaningClean = variation.meaning;
     
     return [
       '인턴' as Rank,
@@ -169,7 +245,7 @@ const RAW_VOCAB_DATA: any[][] = [
       wordClean,
       meaningClean,
       item[2],
-      item[3].replace(new RegExp(item[0], 'g'), wordClean),
+      item[3].replace(new RegExp(item[0].replace(/_/g, ' '), 'g'), wordClean).replace(new RegExp(item[0], 'g'), wordClean),
       item[4]
     ];
   }),
@@ -227,9 +303,10 @@ const RAW_VOCAB_DATA: any[][] = [
     ];
 
     const item = associateWordsData[i % associateWordsData.length];
-    const suffix = Math.floor(id / associateWordsData.length) > 0 ? `_${Math.floor(id / associateWordsData.length)}` : '';
-    const wordClean = item[0] + suffix;
-    const meaningClean = item[1] + (suffix ? ` [심화${suffix}]` : '');
+    const repeatIdx = Math.floor(i / associateWordsData.length) + 1;
+    const variation = getVibrantVocabularyVariation(item[0], item[1], repeatIdx);
+    const wordClean = variation.word;
+    const meaningClean = variation.meaning;
 
     return [
       '사원' as Rank,
@@ -237,7 +314,7 @@ const RAW_VOCAB_DATA: any[][] = [
       wordClean,
       meaningClean,
       item[2],
-      item[3].replace(new RegExp(item[0], 'g'), wordClean),
+      item[3].replace(new RegExp(item[0].replace(/_/g, ' '), 'g'), wordClean).replace(new RegExp(item[0], 'g'), wordClean),
       item[4]
     ];
   }),
@@ -295,9 +372,10 @@ const RAW_VOCAB_DATA: any[][] = [
     ];
 
     const item = managerWordsData[i % managerWordsData.length];
-    const suffix = Math.floor(id / managerWordsData.length) > 0 ? `_${Math.floor(id / managerWordsData.length)}` : '';
-    const wordClean = item[0] + suffix;
-    const meaningClean = item[1] + (suffix ? ` [심화${suffix}]` : '');
+    const repeatIdx = Math.floor(i / managerWordsData.length) + 1;
+    const variation = getVibrantVocabularyVariation(item[0], item[1], repeatIdx);
+    const wordClean = variation.word;
+    const meaningClean = variation.meaning;
 
     return [
       '대리' as Rank,
@@ -305,7 +383,7 @@ const RAW_VOCAB_DATA: any[][] = [
       wordClean,
       meaningClean,
       item[2],
-      item[3].replace(new RegExp(item[0], 'g'), wordClean),
+      item[3].replace(new RegExp(item[0].replace(/_/g, ' '), 'g'), wordClean).replace(new RegExp(item[0], 'g'), wordClean),
       item[4]
     ];
   }),
@@ -361,9 +439,10 @@ const RAW_VOCAB_DATA: any[][] = [
     ];
 
     const item = chiefWordsData[i % chiefWordsData.length];
-    const suffix = Math.floor(id / chiefWordsData.length) > 0 ? `_${Math.floor(id / chiefWordsData.length)}` : '';
-    const wordClean = item[0] + suffix;
-    const meaningClean = item[1] + (suffix ? ` [심화${suffix}]` : '');
+    const repeatIdx = Math.floor(i / chiefWordsData.length) + 1;
+    const variation = getVibrantVocabularyVariation(item[0], item[1], repeatIdx);
+    const wordClean = variation.word;
+    const meaningClean = variation.meaning;
 
     return [
       '과장' as Rank,
@@ -371,7 +450,7 @@ const RAW_VOCAB_DATA: any[][] = [
       wordClean,
       meaningClean,
       item[2],
-      item[3].replace(new RegExp(item[0], 'g'), wordClean),
+      item[3].replace(new RegExp(item[0].replace(/_/g, ' '), 'g'), wordClean).replace(new RegExp(item[0], 'g'), wordClean),
       item[4]
     ];
   }),
@@ -427,9 +506,10 @@ const RAW_VOCAB_DATA: any[][] = [
     ];
 
     const item = ceoWordsData[i % ceoWordsData.length];
-    const suffix = Math.floor(id / ceoWordsData.length) > 0 ? `_${Math.floor(id / ceoWordsData.length)}` : '';
-    const wordClean = item[0] + suffix;
-    const meaningClean = item[1] + (suffix ? ` [심화${suffix}]` : '');
+    const repeatIdx = Math.floor(i / ceoWordsData.length) + 1;
+    const variation = getVibrantVocabularyVariation(item[0], item[1], repeatIdx);
+    const wordClean = variation.word;
+    const meaningClean = variation.meaning;
 
     return [
       'CEO' as Rank,
@@ -437,7 +517,7 @@ const RAW_VOCAB_DATA: any[][] = [
       wordClean,
       meaningClean,
       item[2],
-      item[3].replace(new RegExp(item[0], 'g'), wordClean),
+      item[3].replace(new RegExp(item[0].replace(/_/g, ' '), 'g'), wordClean).replace(new RegExp(item[0], 'g'), wordClean),
       item[4]
     ];
   })
@@ -449,9 +529,9 @@ export const COMPILED_TOEIC_WORDS: TOEICWord[] = RAW_VOCAB_DATA.map((val, idx) =
     id: idx + 1,
     rank_level: val[0] as Rank,
     category: val[1], // index 1 is category
-    word: val[2],
+    word: (val[2] as string).replace(/_/g, ' '),
     meaning: val[3],
-    collocation: val[4],
+    collocation: (val[4] as string).replace(/_/g, ' '),
     example_en: val[5],
     example_ko: val[6]
   };
