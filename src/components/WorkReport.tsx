@@ -27,15 +27,8 @@ export default function WorkReport({
   bookmarkedWordIds = [],
   onToggleBookmark
 }: WorkReportProps) {
-  // Filter core pre-loaded words matching the rank or lower, or including any dynamically added words
-  const eligibleWords = registeredWords.filter(w => {
-    // If it's unlocked by rank level
-    const rankOrder: Rank[] = ['인턴', '사원', '대리', '과장', 'CEO'];
-    const currentOrderIdx = rankOrder.indexOf(currentRank);
-    const wordOrderIdx = rankOrder.indexOf(w.rank_level);
-    return wordOrderIdx <= currentOrderIdx;
-  });
-
+  const [selectedRank, setSelectedRank] = useState<Rank>(currentRank);
+  const [selectedStage, setSelectedStage] = useState<number>(1);
   const [reportSubTab, setReportSubTab] = useState<'CARD' | 'SENTENCE_GAME'>('CARD');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
@@ -50,6 +43,44 @@ export default function WorkReport({
   const [loadingRecommend, setLoadingRecommend] = useState(false);
   const [recommendError, setRecommendError] = useState<string | null>(null);
 
+  // Sync selected rank & stage when user rank upgrades
+  useEffect(() => {
+    setSelectedRank(currentRank);
+    setSelectedStage(1);
+    setSelectedCategory('전체');
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setBriefing(null);
+  }, [currentRank]);
+
+  // Derive stage words dynamically based on chosen Rank & Stage
+  const rankWords = registeredWords.filter(w => w.rank_level === selectedRank);
+  const coreRankWords = rankWords.filter(w => w.id <= 1000);
+  const customRankWords = rankWords.filter(w => w.id > 1000);
+
+  const stageStartIndex = (selectedStage - 1) * 20;
+  const stageEndIndex = selectedStage * 20;
+  const stageCoreWords = coreRankWords.slice(stageStartIndex, stageEndIndex);
+
+  const eligibleWords = [...stageCoreWords, ...customRankWords];
+
+  const handleRankChange = (rank: Rank) => {
+    setSelectedRank(rank);
+    setSelectedStage(1);
+    setSelectedCategory('전체');
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setBriefing(null);
+  };
+
+  const handleStageChange = (stageNum: number) => {
+    setSelectedStage(stageNum);
+    setSelectedCategory('전체');
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setBriefing(null);
+  };
+
   // Monitor length of eligibleWords to automatically select, reset and jump to newly added recommended words
   const prevLengthRef = useRef(eligibleWords.length);
   useEffect(() => {
@@ -62,12 +93,12 @@ export default function WorkReport({
   }, [eligibleWords.length]);
 
   // Extract unlocked categories
-  const rankInfo = RANK_INFOS[currentRank];
-  const unlockedCategories = ['전체', '🔖 북마크 단어', ...rankInfo.unlockedCategories];
+  const rankInfo = RANK_INFOS[selectedRank];
+  const unlockedCategories = ['전체', '🔖 북마크 단어', ...(rankInfo?.unlockedCategories || [])];
 
   // Filter based on selected category / bookmarks
   const filteredWords = selectedCategory === '🔖 북마크 단어'
-    ? eligibleWords.filter(w => bookmarkedWordIds.includes(w.id))
+    ? registeredWords.filter(w => bookmarkedWordIds.includes(w.id) && w.rank_level === selectedRank)
     : (selectedCategory === '전체' 
         ? eligibleWords 
         : eligibleWords.filter(w => w.category === selectedCategory));
@@ -246,6 +277,74 @@ export default function WorkReport({
         />
       ) : (
         <>
+          {/* Rank & Stage Selector */}
+          <div className="bg-slate-50 border border-slate-150 p-4 rounded-3xl space-y-3 shadow-inner">
+            {/* Rank Selector */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">학습 부서/직급 선택 (Position)</label>
+                <span className="text-[9px] bg-slate-200/50 text-slate-500 font-bold px-1.5 py-0.5 rounded-full">
+                  현재 직급: {currentRank}
+                </span>
+              </div>
+              <div className="grid grid-cols-5 gap-1">
+                {(['인턴', '사원', '대리', '과장', 'CEO'] as Rank[]).map((rk) => {
+                  const rankOrder = ['인턴', '사원', '대리', '과장', 'CEO'];
+                  const currentIdx = rankOrder.indexOf(currentRank);
+                  const thisIdx = rankOrder.indexOf(rk);
+                  const isLocked = thisIdx > currentIdx;
+
+                  return (
+                    <button
+                      key={rk}
+                      disabled={isLocked}
+                      onClick={() => handleRankChange(rk)}
+                      className={`py-2 px-1 rounded-xl border text-[10px] font-bold transition flex flex-col items-center justify-center gap-0.5 cursor-pointer select-none active:scale-95 ${
+                        isLocked
+                          ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                          : selectedRank === rk
+                          ? 'bg-blue-600 text-white border-blue-600 shadow shadow-blue-100 font-extrabold'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="text-xs">
+                        {isLocked ? '🔒' : RANK_INFOS[rk]?.avatar}
+                      </span>
+                      <span>{rk}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Stage Selector */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">학습 단계 선택 (Stage)</label>
+                <span className="text-[9px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full">
+                  단계당 기안서 20부 (총 200단어)
+                </span>
+              </div>
+              <div className="flex gap-1 overflow-x-auto pb-1.5 scrollbar-hide">
+                {Array.from({ length: 10 }, (_, idx) => idx + 1).map((stageNum) => {
+                  return (
+                    <button
+                      key={stageNum}
+                      onClick={() => handleStageChange(stageNum)}
+                      className={`py-1.5 px-3 rounded-lg border text-[11px] font-bold transition whitespace-nowrap cursor-pointer select-none active:scale-95 ${
+                        selectedStage === stageNum
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-105'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {stageNum}단계
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           {/* 1. Unlocked Categories list */}
       <div className="space-y-1">
         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-0.5 block">결재 부서 선택 (Categories)</label>

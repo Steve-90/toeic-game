@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, ShieldAlert, Check, X, ShieldCheck, Heart, AlertTriangle } from 'lucide-react';
 import { TOEICWord, Rank } from '../types';
+import { RANK_INFOS } from '../data/words';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface QuizConsoleProps {
@@ -35,13 +36,30 @@ export default function QuizConsole({
   onNavigate,
   onResetHearts
 }: QuizConsoleProps) {
-  // Filter core pre-loaded words matching the rank or lower
-  const eligibleWords = registeredWords.filter(w => {
-    const rankOrder: Rank[] = ['인턴', '사원', '대리', '과장', 'CEO'];
-    const currentOrderIdx = rankOrder.indexOf(currentRank);
-    const wordOrderIdx = rankOrder.indexOf(w.rank_level);
-    return wordOrderIdx <= currentOrderIdx;
-  });
+  const [selectedRank, setSelectedRank] = useState<Rank>(currentRank);
+  const [selectedStage, setSelectedStage] = useState<number | 'all'>('all');
+
+  // Synchronize on promotion
+  useEffect(() => {
+    setSelectedRank(currentRank);
+    setSelectedStage('all');
+  }, [currentRank]);
+
+  // Dynamically calculate eligibleWords based on chosen Quiz Rank & Stage
+  const eligibleWords = React.useMemo(() => {
+    if (selectedStage === 'all') {
+      return registeredWords.filter(w => {
+        const rankOrder: Rank[] = ['인턴', '사원', '대리', '과장', 'CEO'];
+        const currentOrderIdx = rankOrder.indexOf(currentRank);
+        const wordOrderIdx = rankOrder.indexOf(w.rank_level);
+        return wordOrderIdx <= currentOrderIdx;
+      });
+    } else {
+      const rankCoreWords = registeredWords.filter(w => w.rank_level === selectedRank && w.id <= 1000);
+      const startIdx = (Number(selectedStage) - 1) * 20;
+      return rankCoreWords.slice(startIdx, startIdx + 20);
+    }
+  }, [registeredWords, selectedRank, selectedStage, currentRank]);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -221,11 +239,111 @@ export default function QuizConsole({
             </p>
           </div>
 
+          {/* Quiz Scope Settings */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-3.5">
+            <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-wider block border-b border-slate-200 pb-1.5">
+              ⚙️ 퀴즈 범위 설정 (Scope Settings)
+            </h4>
+
+            {/* Mode selection: All unlocked vs Specific Stage */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-200/60 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setSelectedStage('all')}
+                className={`py-2 px-3 text-[11px] font-bold rounded-lg transition text-center cursor-pointer ${
+                  selectedStage === 'all'
+                    ? 'bg-blue-600 text-white shadow shadow-blue-100'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                전체 직급 랜덤
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStage(1)}
+                className={`py-2 px-3 text-[11px] font-bold rounded-lg transition text-center cursor-pointer ${
+                  selectedStage !== 'all'
+                    ? 'bg-blue-600 text-white shadow shadow-blue-105'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                지정 단계 집중
+              </button>
+            </div>
+
+            {selectedStage !== 'all' && (
+              <div className="space-y-3">
+                {/* Chosen Rank */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 block">직급 부서</span>
+                  <div className="grid grid-cols-5 gap-1">
+                    {(['인턴', '사원', '대리', '과장', 'CEO'] as Rank[]).map((rk) => {
+                      const rankOrder = ['인턴', '사원', '대리', '과장', 'CEO'];
+                      const currentIdx = rankOrder.indexOf(currentRank);
+                      const thisIdx = rankOrder.indexOf(rk);
+                      const isLocked = thisIdx > currentIdx;
+
+                      return (
+                        <button
+                          key={rk}
+                          disabled={isLocked}
+                          onClick={() => setSelectedRank(rk)}
+                          className={`py-1.5 rounded-lg border text-[10px] font-bold transition flex flex-col items-center justify-center gap-0.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                            selectedRank === rk
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span>{isLocked ? '🔒' : RANK_INFOS[rk]?.avatar}</span>
+                          <span>{rk}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Chose Stage Slider */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400">
+                    <span className="font-bold">학습 단계 ({selectedStage}단계)</span>
+                    <span className="font-mono text-[9px] text-blue-600 font-bold">20단어</span>
+                  </div>
+                  <div className="flex gap-1 overflow-x-auto pb-1.5 scrollbar-hide">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((stageNum) => (
+                      <button
+                        key={stageNum}
+                        onClick={() => setSelectedStage(stageNum)}
+                        className={`py-1.5 px-3 rounded-md border text-[10px] font-bold transition whitespace-nowrap cursor-pointer ${
+                          selectedStage === stageNum
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {stageNum}단계
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Questions count info indicator */}
+            <div className="text-[10px] text-slate-400 bg-slate-100 p-2.5 rounded-xl flex justify-between items-center">
+              <span>퀴즈 출제 가능 단어 수:</span>
+              <span className="font-bold font-mono text-slate-700">
+                {eligibleWords.length}개 단어
+              </span>
+            </div>
+          </div>
+
           <button
             onClick={generateQuizSet}
-            className="w-full bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white py-3.5 px-6 rounded-xl transition shadow active:scale-95 cursor-pointer shadow-blue-105"
+            disabled={eligibleWords.length < 4}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed font-extrabold text-xs text-white py-3.5 px-6 rounded-xl transition shadow active:scale-95 cursor-pointer shadow-blue-105"
           >
-            서류 결재 업무 시작 (Start Quiz)
+            {eligibleWords.length < 4
+              ? '단어가 부족하여 시험 불가능 (최소 4개 필요)'
+              : '서류 결재 업무 시작 (Start Quiz)'}
           </button>
         </div>
       )}
